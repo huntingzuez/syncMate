@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/syncmate
+    ports:
+      - "8000:8000"
+    command: bash -c 'python3 manage.py runserver 0.0.0.0:8000 & celery -A syncMate worker -P solo --loglevel=info'
+    environment:
+      - DEBUG=1
+      - API_URL=http://localhost:8000/media/
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    restart: always
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq"
+    volumes:
+      - ./rabbitmq_config/:/etc/rabbitmq/
+    expose:
+      - 5672
+      - 15672
+    environment:
+      - RABBITMQ_SCHEMA=amqp
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=xxx
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+
+      
+volumes:
+  db-data:
