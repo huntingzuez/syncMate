@@ -11,8 +11,9 @@ import os
 from django.conf import settings
 from app.models import SyncTask
 import uuid
-from app.utils.inference import VideoProcessor
 from app.tasks import syncing_task
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
@@ -72,3 +73,16 @@ class SyncTaskAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except SyncTask.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+def download_synced_file(request, task_id):
+    # Fetch the SyncTask by its task_id
+    task = get_object_or_404(SyncTask, task_id=task_id)
+
+    # Ensure the file exists
+    if task.synced_file:
+        file_path = task.synced_file.path
+        response = FileResponse(open(file_path, 'rb'))
+        response['Content-Disposition'] = f'attachment; filename="{task.synced_file.name}"'
+        return response
+    else:
+        raise Http404("File not found.")

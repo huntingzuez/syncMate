@@ -13,6 +13,7 @@ from app.models import SyncTask
 import warnings
 import os
 from syncMate.settings import BASE_DIR
+from django.core.files import File
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -102,52 +103,46 @@ class VideoProcessor:
         return animate_from_coeff
 
     def main(self):
-        torch.cuda.empty_cache()
-
-        save_dir = os.path.join(self.result_dir, strftime("%Y_%m_%d_%H.%M.%S"))
-        os.makedirs(save_dir, exist_ok=True)
-
         try:
-            task = SyncTask.objects.get(task_id=self.task_id)
-            # Preprocessing
-            preprocess_model = self.preprocess()
-            first_frame_dir = os.path.join(save_dir, 'first_frame_dir')
-            os.makedirs(first_frame_dir, exist_ok=True)
-            logging.info('3DMM Extraction for source image.')
-            print(self.source_video)
-            first_coeff_path, crop_pic_path, crop_info = preprocess_model.generate(self.source_video, first_frame_dir)
-            if first_coeff_path is None:
-                logging.error("Can't get the coefficients of the input.")
-                return
+            task = SyncTask.objects.filter(task_id=self.task_id, status=1)
+            if task:
+                task = task.first()
+                torch.cuda.empty_cache()
+                save_dir = os.path.join(self.result_dir, strftime("%Y_%m_%d_%H.%M.%S"))
+                os.makedirs(save_dir, exist_ok=True)
+                # Preprocessing
+                preprocess_model = self.preprocess()
+                first_frame_dir = os.path.join(save_dir, 'first_frame_dir')
+                os.makedirs(first_frame_dir, exist_ok=True)
+                logging.info('3DMM Extraction for source image.')
+                print(self.source_video)
+                first_coeff_path, crop_pic_path, crop_info = preprocess_model.generate(self.source_video, first_frame_dir)
+                if first_coeff_path is None:
+                    logging.error("Can't get the coefficients of the input.")
+                    return
 
-            # Audio to Coeff
-            audio_to_coeff = self.audio_to_coefficient()
-            batch = get_data(first_coeff_path, self.driven_audio, self.device)
-            coeff_path = audio_to_coeff.generate(batch, save_dir)
-            # Animate
-            restorer_model = GFPGANer(model_path='checkpoints/GFPGANv1.3.pth', upscale=1, arch='clean',channel_multiplier=2, bg_upsampler=None)
-            enhancer_model = FaceEnhancement(base_dir='checkpoints', size=512, model='GPEN-BFR-512', use_sr=False,sr_model='rrdb_realesrnet_psnr', channel_multiplier=2, narrow=1, device=self.device)
-            animate_from_coeff = self.animate()
-            data = get_facerender_data(coeff_path, crop_pic_path, first_coeff_path, self.driven_audio, self.batch_size, self.device)
-            tmp_path, new_audio_path, return_path = animate_from_coeff.generate(data, save_dir, self.source_video, crop_info,restorer_model, enhancer_model, self.enhancer)
-            print('temp_path--------- {}'.format(tmp_path))
-            print('return_path--------- {}'.format(return_path))
-            print('new_audio_path--------- {}'.format(new_audio_path))
-            task.synced_file_path = return_path
-            task.status = SyncTask.finished
-            task.save()
-            torch.cuda.empty_cache()
-            os.remove(tmp_path)
+                # Audio to Coeff
+                audio_to_coeff = self.audio_to_coefficient()
+                batch = get_data(first_coeff_path, self.driven_audio, self.device)
+                coeff_path = audio_to_coeff.generate(batch, save_dir)
+                # Animate
+                restorer_model = GFPGANer(model_path='checkpoints/GFPGANv1.3.pth', upscale=1, arch='clean',channel_multiplier=2, bg_upsampler=None)
+                enhancer_model = FaceEnhancement(base_dir='checkpoints', size=512, model='GPEN-BFR-512', use_sr=False,sr_model='rrdb_realesrnet_psnr', channel_multiplier=2, narrow=1, device=self.device)
+                animate_from_coeff = self.animate()
+                data = get_facerender_data(coeff_path, crop_pic_path, first_coeff_path, self.driven_audio, self.batch_size, self.device)
+                tmp_path, new_audio_path, return_path = animate_from_coeff.generate(data, save_dir, self.source_video, crop_info,restorer_model, enhancer_model, self.enhancer)
+                print('temp_path--------- {}'.format(tmp_path))
+                print('return_path--------- {}'.format(return_path))
+                print('new_audio_path--------- {}'.format(new_audio_path))
+                with open(return_path, 'rb') as f:
+                    task.synced_file.save(os.path.basename(return_path), File(f))
+                task.status = SyncTask.finished
+                task.save()
             return True
-
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
             task = SyncTask.objects.get(task_id=self.task_id)
             task.status = SyncTask.failed
             task.save()
-            raise e
+        return True
 
-if __name__ == '__main__':
-    # Example usage
-    processor =  VideoProcessor()
-    processor.main()

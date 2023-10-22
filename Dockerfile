@@ -25,5 +25,5 @@ RUN apt-get update && \
     pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113 && \
     python -m pip install paddlepaddle-gpu==2.3.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html && \
     # Install pip packages from requirements.txt
-    pip install --no-cache-dir -r /tmp/requirements.txt
-    
+    pip install --no-cache-dir -r /tmp/requirements.txt 
+

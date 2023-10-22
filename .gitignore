@@ -1,2 +1,5 @@
+/results
+/media
 *.mp4
 *.wav
+checkpoints
