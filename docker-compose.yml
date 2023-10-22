@@ -36,7 +36,3 @@ services:
       - RABBITMQ_PASSWORD=
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-
-      
-volumes:
-  db-data:
