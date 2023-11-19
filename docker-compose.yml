@@ -1,4 +1,4 @@
-version: '3.8'
+version: '2.3'
 
 services:
   api:
@@ -8,11 +8,11 @@ services:
     volumes:
       - .:/syncmate
     ports:
-      - "8000:8000"
-    command: bash -c 'python3 manage.py runserver 0.0.0.0:8000 & celery -A syncMate worker -P solo --loglevel=info'
+      - "80:80"
+    command: bash -c 'python3 manage.py runserver 0.0.0.0:80 & celery -A syncMate worker -P solo --loglevel=info'
     environment:
       - DEBUG=1
-      - API_URL=http://localhost:8000/media/
+      - API_URL=http://184.105.6.196/media/
     depends_on:
       - rabbitmq
 
