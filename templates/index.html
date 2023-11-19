@@ -24,12 +24,30 @@
       color: white;
     }
     
-    .form-container {
+    .form-container, .table-container {
       margin-top: 2rem;
-      width: 50%;
+      width: 80%;
       margin-left: auto;
       margin-right: auto;
     }
+
+    .loader {
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 2s linear infinite;
+    display: inline-block; /* Makes the loader inline */
+    vertical-align: middle; /* Aligns it vertically to the middle */
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+
   </style>
 </head>
 
@@ -64,6 +82,61 @@
       </button>
     </form>
   </div>
+
+<!-- Table Container -->
+<div class="container table-container">
+  <div class="row right-align">
+    <form action="{% url 'delete_all_tasks' %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn waves-effect waves-light red">
+        Delete All
+        <i class="material-icons right">delete_forever</i>
+      </button>
+    </form>
+  </div>
+  <table class="highlight responsive-table">
+    <thead>
+      <tr>
+        <th>Task ID</th>
+        <th>Video File</th>
+        <th>Audio File</th>
+        <th>Duration</th> <!-- Added Duration header -->
+        <th>Status</th>
+        <th>Download</th>
+        <th>Delete</th>
+
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows for tasks -->
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.id }}</td>
+        <td>{{ task.video_file }}</td>
+        <td>{{ task.audio_file }}</td>
+        <td>{{ task.duration }}</td>
+        <td>
+          {% if task.status == 1 %}
+            <span>{{ task.get_status_display }}</span> <!-- Status text -->
+            <div class="loader"></div> <!-- Loading animation -->
+          {% else %}
+            {{ task.get_status_display }}
+          {% endif %}
+        </td>    
+        <td>
+          {% if task.status == 3 %}
+            <a href="{% url 'download_synced_file' task_id=task.task_id %}">Download</a>
+          {% else %}
+            <span class="grey-text">Download</span>
+          {% endif %}
+        </td>
+        <td><a href="{% url 'delete_task' task_id=task.task_id %}" class="red-text">
+          Delete</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
   <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>

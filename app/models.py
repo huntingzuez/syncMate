@@ -4,6 +4,7 @@ from django.db import models
 import uuid
 import os
 from django.urls import reverse
+from datetime import timedelta, datetime
 
 class SyncTask(models.Model):
 
@@ -38,4 +39,15 @@ class SyncTask(models.Model):
         print(relative_url)
         url = "http://localhost:8000{}".format(relative_url)
         return url if self.synced_file else None
-
+    
+    @property
+    def duration(self):
+        self.updated_at = datetime.now() if not self.updated_at else self.updated_at 
+        delta = self.updated_at - self.created_at
+        print(self.created_at)
+        print(delta)
+        print('--------------------------')
+        if  self.created_at:
+            # Formatting duration as days, hours, minutes
+            return str(delta - timedelta(microseconds=delta.microseconds))
+        return None
