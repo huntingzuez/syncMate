@@ -61,11 +61,11 @@
       {% csrf_token %}
       <div class="file-field input-field">
         <div class="btn-small">
-          <span>Video</span>
+          <span>Video<span>
           <input type="file" name="videoFile" accept="video/*" required>
         </div>
         <div class="file-path-wrapper">
-          <input class="file-path validate" type="text" placeholder="Upload video file">
+          <input class="file-path validate" type="text" placeholder="Upload video file (.mp4)">
         </div>
       </div>
       <div class="file-field input-field">
@@ -74,7 +74,7 @@
           <input type="file" name="audioFile" accept="audio/*" required>
         </div>
         <div class="file-path-wrapper">
-          <input class="file-path validate" type="text" placeholder="Upload audio file">
+          <input class="file-path validate" type="text" placeholder="Upload audio file (.wav)">
         </div>
       </div>
       <button class="btn-small waves-effect waves-light" type="submit" name="action">Sync
