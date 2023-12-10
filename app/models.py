@@ -20,6 +20,7 @@ class SyncTask(models.Model):
     audio_file = models.FileField(upload_to='audio_files/')
     video_file = models.FileField(upload_to='video_files/')
     synced_file = models.FileField(upload_to='result/')
+    cloudinary_path = models.CharField(max_length=225, null=True, blank=True)
     task_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     status = models.IntegerField(choices=status_choices, default=1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -35,8 +36,9 @@ class SyncTask(models.Model):
 
     @property
     def result_synced_file(self):
+        if self.cloudinary_path:
+            return self.cloudinary_path
         relative_url = reverse('download_synced_file', kwargs={'task_id': self.task_id})
-        print(relative_url)
         url = "http://localhost:8000{}".format(relative_url)
         return url if self.synced_file else None
     

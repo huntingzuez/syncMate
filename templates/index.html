@@ -101,6 +101,7 @@
         <th>Video File</th>
         <th>Audio File</th>
         <th>Duration</th> <!-- Added Duration header -->
+        <th>Started</th>
         <th>Status</th>
         <th>Download</th>
         <th>Delete</th>
@@ -115,6 +116,7 @@
         <td>{{ task.video_file }}</td>
         <td>{{ task.audio_file }}</td>
         <td>{{ task.duration }}</td>
+        <td>{{ task.created_at|date }} | {{ task.created_at|date:"H:i:s" }}</td>
         <td>
           {% if task.status == 1 %}
             <span>{{ task.get_status_display }}</span> <!-- Status text -->
@@ -125,7 +127,11 @@
         </td>    
         <td>
           {% if task.status == 3 %}
+          {% if not task.cloudinary_path  %}
             <a href="{% url 'download_synced_file' task_id=task.task_id %}">Download</a>
+            {% else %}
+            <a href="{{task.cloudinary_path}}">Download</a>
+            {% endif %}
           {% else %}
             <span class="grey-text">Download</span>
           {% endif %}

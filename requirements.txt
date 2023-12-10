@@ -25,3 +25,4 @@ djangorestframework==3.12.4
 Markdown==3.3.4
 dlib-bin
 celery[redis]    
+cloudinary==1.37.0

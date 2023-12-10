@@ -14,6 +14,21 @@ import warnings
 import os
 from syncMate.settings import BASE_DIR
 from django.core.files import File
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+# cloudinary configuration
+cloudinary.config(
+cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", None),
+api_key = os.getenv("CLOUDINARY_API_KEY", None),
+api_secret = os.getenv("CLOUDINARY_API_SECRET", None),
+secure = True
+)
+cloudinary_configured = False
+if os.getenv("CLOUDINARY_CLOUD_NAME", None) and os.getenv("CLOUDINARY_API_KEY", None) and os.getenv("CLOUDINARY_API_SECRET", None):
+    cloudinary_configured = True
+
 
 # Suppress warnings
 warnings.filterwarnings("ignore")
@@ -134,8 +149,12 @@ class VideoProcessor:
                 print('temp_path--------- {}'.format(tmp_path))
                 print('return_path--------- {}'.format(return_path))
                 print('new_audio_path--------- {}'.format(new_audio_path))
-                with open(return_path, 'rb') as f:
-                    task.synced_file.save(os.path.basename(return_path), File(f))
+                if not cloudinary_configured:
+                    with open(return_path, 'rb') as f:
+                        task.synced_file.save(os.path.basename(return_path), File(f))
+                else:
+                    cloud_obj = cloudinary.uploader.upload_large(return_path, resource_type = "video", chunk_size = 6000000)
+                    task.cloudinary_path = cloud_obj.get("secure_url")
                 task.status = SyncTask.finished
                 task.save()
             return True
